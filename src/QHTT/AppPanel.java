@@ -6,8 +6,10 @@ import java.awt.*;
 public class AppPanel extends JFrame
 {
     private JTextField varField, constraintField;
-    private JPanel inputPanel, objectivePanel, constraintsPanel;
-    private JButton generateButton;
+    private JPanel inputPanel;
+    protected JPanel objectivePanel;
+    protected JPanel constraintsPanel;
+    private JButton generateButton, solveButton;
 
     public AppPanel()
     {
@@ -59,8 +61,8 @@ public class AppPanel extends JFrame
         ObjectivePanel(numVars);
         ConstraintsPanel(numVars, numCons);
 
-        generateButton = new JButton("Solve");
-        inputPanel.add(generateButton);
+        solveButton = new JButton("Solve");
+        inputPanel.add(solveButton);
 
         inputPanel.revalidate();
         inputPanel.repaint();
@@ -68,7 +70,7 @@ public class AppPanel extends JFrame
 
     private void ObjectivePanel(int _numVars)
     {
-        objectivePanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
+        objectivePanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 10));
         objectivePanel.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         JComboBox<String> maxMinBox = new JComboBox<>(new String[]{"Max", "Min"});
@@ -87,7 +89,7 @@ public class AppPanel extends JFrame
 
         for (int i = 0; i < _numCons; i++)
         {
-            JPanel rowPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
+            JPanel rowPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 10));
             rowPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
 
             PrintLoop(_numVars, rowPanel);
