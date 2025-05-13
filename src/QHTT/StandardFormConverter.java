@@ -43,6 +43,10 @@ public class StandardFormConverter extends AppPanel
             JPanel rowPanel = (JPanel) constraintsPanel.getComponent(i);
             double[] coeffs = new double[_numVars];
 
+            //doc dau rang buoc
+            JComboBox<String> signBox = (JComboBox<String>) rowPanel.getComponent(_numVars * 2);
+            String sign = (String) signBox.getSelectedItem();
+
             //doc he so rang buoc
             for(int j = 0; j < _numVars; j++)
             {
@@ -50,13 +54,23 @@ public class StandardFormConverter extends AppPanel
                 coeffs[j] = Double.parseDouble(field.getText().trim());
             }
 
-            //doc dau rang buoc
-            JComboBox<String> signBox = (JComboBox<String>) rowPanel.getComponent(_numVars * 2);
-            String sign = (String) signBox.getSelectedItem();
+            //doi dau
+            if (sign.equals(">="))
+            {
+                for (int j = 0; j < _numVars; j++)
+                {
+                    coeffs[j] *= -1;
+                }
+                sign = "<=";
+            }
 
             //doc he so tu do
             JTextField rhsField = (JTextField) rowPanel.getComponent(_numVars * 2 + 1);
             double rhsValue = Double.parseDouble(rhsField.getText().trim());
+            if (sign.equals(">="))
+            {
+                rhsValue *= -1;
+            }
 
             lpModel.constraintCoeffs.add(coeffs);
             lpModel.constraintSigns.add(sign);
