@@ -2,6 +2,7 @@ package QHTT;
 
 import javax.swing.*;
 import java.awt.*;
+import java.util.ArrayList;
 
 public class AppPanel extends JFrame
 {
@@ -9,14 +10,14 @@ public class AppPanel extends JFrame
     private JPanel inputPanel;
     protected JPanel objectivePanel;
     protected JPanel constraintsPanel;
-    private JButton generateButton, solveButton;
+    private JButton generateButton, convertButton;
 
     public AppPanel()
     {
         this.init();
 
         this.setTitle("Linear Programming Input");
-        this.setSize(500, 700);
+        this.setSize(500, 250);
         this.setLocationRelativeTo(null);
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         this.setVisible(true);
@@ -61,11 +62,19 @@ public class AppPanel extends JFrame
         ObjectivePanel(numVars);
         ConstraintsPanel(numVars, numCons);
 
-        solveButton = new JButton("Solve");
-        inputPanel.add(solveButton);
+        convertButton = new JButton("Convert");
+        inputPanel.add(convertButton);
 
         inputPanel.revalidate();
         inputPanel.repaint();
+
+        convertButton.addActionListener(e -> {
+            try {
+                convertAndDisplayStandardForm(numVars, numCons);
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(this, "Lỗi: " + ex.getMessage());
+            }
+        });
     }
 
     private void ObjectivePanel(int _numVars)
@@ -82,7 +91,8 @@ public class AppPanel extends JFrame
         inputPanel.add(objectivePanel);
     }
 
-    private void ConstraintsPanel(int _numVars, int _numCons) {
+    private void ConstraintsPanel(int _numVars, int _numCons)
+    {
         constraintsPanel = new JPanel();
         constraintsPanel.setLayout(new BoxLayout(constraintsPanel, BoxLayout.Y_AXIS));
         constraintsPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -115,6 +125,70 @@ public class AppPanel extends JFrame
             _x.add(new JLabel("x" + (j + 1) + (j < _numVars - 1 ? " + " : "")));
         }
     }
+
+    private void convertAndDisplayStandardForm(int numVars, int numCons) {
+        // Dùng đúng LPModel từ StandardFormTransformer
+        StandardFormTransformer.LPModel model = new StandardFormTransformer.LPModel();
+        model.objectiveCoeffs = new double[numVars];
+        model.constraintCoeffs = new ArrayList<>();
+        model.rhsValues = new ArrayList<>();
+        model.constraintSigns = new ArrayList<>();
+
+        // Lấy hệ số hàm mục tiêu
+        Component[] components = objectivePanel.getComponents();
+
+        int compIndex = 2; // bỏ qua JComboBox và JLabel "z ="
+        for (int i = 0; i < numVars; i++) {
+            JTextField coeffField = (JTextField) components[compIndex];
+            model.objectiveCoeffs[i] = Double.parseDouble(coeffField.getText());
+            compIndex += 2; // bỏ qua JLabel "x +"
+        }
+
+        // Lấy hệ số ràng buộc và dấu
+        for (int i = 0; i < numCons; i++) {
+            JPanel rowPanel = (JPanel) constraintsPanel.getComponent(i);
+            Component[] rowComponents = rowPanel.getComponents();
+
+            double[] coeffs = new double[numVars];
+            int index = 0;
+            for (int j = 0; j < numVars; j++) {
+                JTextField coeffField = (JTextField) rowComponents[index];
+                coeffs[j] = Double.parseDouble(coeffField.getText());
+                index += 2; // skip JLabel
+            }
+
+            JComboBox<String> signBox = (JComboBox<String>) rowComponents[index];
+            String sign = (String) signBox.getSelectedItem();
+
+            JTextField rhsField = (JTextField) rowComponents[index + 1];
+            double rhs = Double.parseDouble(rhsField.getText());
+
+            // Nếu dấu là >= thì đổi dấu sang <= (chuyển về <=)
+            if (sign.equals(">=")) {
+                for (int j = 0; j < coeffs.length; j++) {
+                    coeffs[j] *= -1;
+                }
+                rhs *= -1;
+                sign = "<=";
+            }
+
+            // Giữ nguyên dấu "=" hoặc "<="
+
+            model.constraintCoeffs.add(coeffs);
+            model.rhsValues.add(rhs);
+            model.constraintSigns.add(sign);
+        }
+
+        // Chuyển sang dạng chuẩn
+        StandardFormTransformer.StandardLPModel standardModel = StandardFormTransformer.convertToStandardForm(model);
+
+        // Hiển thị bảng
+        StandardFormTransformer viewer = new StandardFormTransformer();
+        viewer.showStandardModel(standardModel);
+    }
+
+
+
 
     public static void main(String[] args)
     {
