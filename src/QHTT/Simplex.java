@@ -16,7 +16,9 @@ public class Simplex {
         rows = numOfConstraints+1; // row number + 1 
         cols = numOfUnknowns+1;   // column number + 1
         table = new double[rows][]; // create a 2d array
-        
+
+
+
         // initialize references to arrays
         for(int i = 0; i < rows; i++){
             table[i] = new double[cols];
@@ -34,6 +36,7 @@ public class Simplex {
         }
         System.out.println();
     }
+
     
     // fills the simplex tableau with coefficients
     public void fillTable(double[][] data){

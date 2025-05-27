@@ -126,6 +126,7 @@ public class AppPanel extends JFrame
         }
     }
 
+
     private void convertAndDisplayStandardForm(int numVars, int numCons) {
         // Dùng đúng LPModel từ StandardFormTransformer
         StandardFormTransformer.LPModel model = new StandardFormTransformer.LPModel();
@@ -137,10 +138,21 @@ public class AppPanel extends JFrame
         // Lấy hệ số hàm mục tiêu
         Component[] components = objectivePanel.getComponents();
 
+        JComboBox<String> maxMinBox = (JComboBox<String>) objectivePanel.getComponent(0);
+        model.isMax = maxMinBox.getSelectedItem().equals("Max");
+
         int compIndex = 2; // bỏ qua JComboBox và JLabel "z ="
-        for (int i = 0; i < numVars; i++) {
+        for (int i = 0; i < numVars; i++)
+        {
             JTextField coeffField = (JTextField) components[compIndex];
-            model.objectiveCoeffs[i] = Double.parseDouble(coeffField.getText());
+            if(model.isMax)
+            {
+                model.objectiveCoeffs[i] = -Double.parseDouble(coeffField.getText());
+            }
+            else
+            {
+                model.objectiveCoeffs[i] = Double.parseDouble(coeffField.getText());
+            }
             compIndex += 2; // bỏ qua JLabel "x +"
         }
 
@@ -172,8 +184,6 @@ public class AppPanel extends JFrame
                 sign = "<=";
             }
 
-            // Giữ nguyên dấu "=" hoặc "<="
-
             model.constraintCoeffs.add(coeffs);
             model.rhsValues.add(rhs);
             model.constraintSigns.add(sign);
@@ -186,9 +196,6 @@ public class AppPanel extends JFrame
         StandardFormTransformer viewer = new StandardFormTransformer();
         viewer.showStandardModel(standardModel);
     }
-
-
-
 
     public static void main(String[] args)
     {
