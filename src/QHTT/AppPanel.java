@@ -68,10 +68,12 @@ public class AppPanel extends JFrame
         inputPanel.revalidate();
         inputPanel.repaint();
 
-        convertButton.addActionListener(e -> {
+        convertButton.addActionListener(e ->
+        {
             try {
                 convertAndDisplayStandardForm(numVars, numCons);
-            } catch (Exception ex) {
+            } catch (Exception ex)
+            {
                 JOptionPane.showMessageDialog(this, "Lỗi: " + ex.getMessage());
             }
         });
@@ -127,21 +129,21 @@ public class AppPanel extends JFrame
     }
 
 
-    private void convertAndDisplayStandardForm(int numVars, int numCons) {
-        // Dùng đúng LPModel từ StandardFormTransformer
+    private void convertAndDisplayStandardForm(int numVars, int numCons)
+    {
         StandardFormTransformer.LPModel model = new StandardFormTransformer.LPModel();
         model.objectiveCoeffs = new double[numVars];
         model.constraintCoeffs = new ArrayList<>();
         model.rhsValues = new ArrayList<>();
         model.constraintSigns = new ArrayList<>();
 
-        // Lấy hệ số hàm mục tiêu
+        //Lấy hệ số hàm mục tiêu
         Component[] components = objectivePanel.getComponents();
 
         JComboBox<String> maxMinBox = (JComboBox<String>) objectivePanel.getComponent(0);
         model.isMax = maxMinBox.getSelectedItem().equals("Max");
 
-        int compIndex = 2; // bỏ qua JComboBox và JLabel "z ="
+        int compIndex = 2; //bỏ qua JComboBox và JLabel "z ="
         for (int i = 0; i < numVars; i++)
         {
             JTextField coeffField = (JTextField) components[compIndex];
@@ -157,13 +159,15 @@ public class AppPanel extends JFrame
         }
 
         // Lấy hệ số ràng buộc và dấu
-        for (int i = 0; i < numCons; i++) {
+        for (int i = 0; i < numCons; i++)
+        {
             JPanel rowPanel = (JPanel) constraintsPanel.getComponent(i);
             Component[] rowComponents = rowPanel.getComponents();
 
             double[] coeffs = new double[numVars];
             int index = 0;
-            for (int j = 0; j < numVars; j++) {
+            for (int j = 0; j < numVars; j++)
+            {
                 JTextField coeffField = (JTextField) rowComponents[index];
                 coeffs[j] = Double.parseDouble(coeffField.getText());
                 index += 2; // skip JLabel
@@ -176,8 +180,10 @@ public class AppPanel extends JFrame
             double rhs = Double.parseDouble(rhsField.getText());
 
             // Nếu dấu là >= thì đổi dấu sang <= (chuyển về <=)
-            if (sign.equals(">=")) {
-                for (int j = 0; j < coeffs.length; j++) {
+            if (sign.equals(">="))
+            {
+                for (int j = 0; j < coeffs.length; j++)
+                {
                     coeffs[j] *= -1;
                 }
                 rhs *= -1;

@@ -3,32 +3,35 @@ package QHTT;
 import javax.swing.*;
 import java.awt.*;
 import java.text.DecimalFormat;
-import java.util.ArrayList;
-import java.util.List;
 
-public class SimplexSolver extends JFrame {
+
+public class SimplexSolver extends JFrame
+{
     private JTextArea solutionTextArea;
     private JScrollPane scrollPane;
     private StandardFormTransformer.StandardLPModel model;
     private Simplex simplex;
     private boolean needsTwoPhase;
 
-    public SimplexSolver(StandardFormTransformer.StandardLPModel inputModel) {
+    public SimplexSolver(StandardFormTransformer.StandardLPModel inputModel)
+    {
         this.model = inputModel;
         this.needsTwoPhase = checkForNegativeRHS();
-        this.initComponents();
+        this.init();
         this.setupUI();
         this.solveProblem();
     }
 
-    private void initComponents() {
+    private void init()
+    {
         solutionTextArea = new JTextArea();
         solutionTextArea.setEditable(false);
         solutionTextArea.setFont(new Font("Monospaced", Font.PLAIN, 12));
         scrollPane = new JScrollPane(solutionTextArea);
     }
 
-    private void setupUI() {
+    private void setupUI()
+    {
         this.setTitle("Simplex Solver - Solution Steps");
         this.setSize(800, 600);
         this.setLocationRelativeTo(null);
@@ -38,26 +41,34 @@ public class SimplexSolver extends JFrame {
         this.setVisible(true);
     }
 
-    private boolean checkForNegativeRHS() {
-        for (Double rhs : model.rhsValues) {
-            if (rhs < 0) {
+    private boolean checkForNegativeRHS()
+    {
+        for (Double rhs : model.rhsValues)
+        {
+            if (rhs < 0)
+            {
                 return true;
             }
         }
         return false;
     }
 
-    private void solveProblem() {
-        if (needsTwoPhase) {
-            solutionTextArea.append("=== TWO-PHASE METHOD REQUIRED (Negative RHS values found) ===\n");
+    private void solveProblem()
+    {
+        if (needsTwoPhase)
+        {
+            solutionTextArea.append("=== TWO-PHASE METHOD(Negative RHS values found) ===\n");
             solveWithTwoPhaseMethod();
-        } else {
+        }
+        else
+        {
             solutionTextArea.append("=== STANDARD SIMPLEX METHOD ===\n");
             solveWithStandardMethod();
         }
     }
 
-    private void solveWithStandardMethod() {
+    private void solveWithStandardMethod()
+    {
         double[][] tableData = TableDataExtractor.extractTableData(model);
         int numConstraints = model.constraintCoeffs.size();
         int numVariables = model.objectiveCoeffs.length;
@@ -71,7 +82,8 @@ public class SimplexSolver extends JFrame {
         runSimplexIterations();
     }
 
-    private void solveWithTwoPhaseMethod() {
+    private void solveWithTwoPhaseMethod()
+    {
         solutionTextArea.append("\n=== PHASE 1: FINDING FEASIBLE SOLUTION ===\n");
         double[][] tableData = TableDataExtractor.extractTableData(model);
         int numConstraints = model.constraintCoeffs.size();
@@ -107,43 +119,6 @@ public class SimplexSolver extends JFrame {
         }
     }
 
-    /*private double[][] preparePhase1Table(List<Integer> artificialVars) {
-        int numConstraints = model.constraintCoeffs.size();
-        int originalVars = model.numOriginalVars;
-        int slackVars = model.numSlackVars;
-        int totalVars = originalVars + slackVars;
-
-        // Count needed artificial variables
-        for (int i = 0; i < numConstraints; i++) {
-            if (model.rhsValues.get(i) < 0) {
-                artificialVars.add(totalVars + artificialVars.size());
-            }
-        }
-
-        int totalCols = totalVars + artificialVars.size() + 1; // +1 for RHS
-        double[][] phase1Table = new double[numConstraints + 1][totalCols];
-
-        // Copy original constraints
-        for (int i = 0; i < numConstraints; i++) {
-            double[] originalRow = model.constraintCoeffs.get(i);
-            System.arraycopy(originalRow, 0, phase1Table[i], 0, originalRow.length);
-            phase1Table[i][totalCols - 1] = model.rhsValues.get(i);
-
-            // Add artificial variable if needed
-            if (model.rhsValues.get(i) < 0) {
-                int artificialIndex = originalVars + slackVars + artificialVars.indexOf(totalVars + artificialVars.size() - 1);
-                phase1Table[i][artificialIndex] = 1;
-            }
-        }
-
-        // Set up phase 1 objective (minimize sum of artificial variables)
-        for (int artVar : artificialVars) {
-            phase1Table[numConstraints][artVar] = 1;
-        }
-
-        return phase1Table;
-    }*/
-
     private boolean runPhase1(Simplex simplex)
     {
         simplex.compute(3);
@@ -165,7 +140,8 @@ public class SimplexSolver extends JFrame {
             }
             iteration++;
 
-            if(err == Simplex.ERROR.IS_OPTIMAL) {
+            if(err == Simplex.ERROR.IS_OPTIMAL)
+            {
                 phase1Complete = true;
                 // Check if all artificial variables are 0
                 double objectiveValue = simplex.getTable()[simplex.getTable().length-1][simplex.getTable()[0].length-1];
@@ -194,100 +170,120 @@ public class SimplexSolver extends JFrame {
             }
         }
 
-        if (!phase1Complete) {
+        if (!phase1Complete)
+        {
             solutionTextArea.append("\nPHASE 1 ITERATION LIMIT REACHED\n");
         }
 
         return feasible;
     }
 
-    private void runSimplexIterations() {
+    private void runSimplexIterations()
+    {
         int iteration = 1;
         boolean quit = false;
 
-        while (!quit && iteration <= 50) {
-            Simplex.ERROR err = simplex.compute(1); // Using Bland's rule
+        while (!quit && iteration <= 50)
+        {
+            Simplex.ERROR err = simplex.compute(1); // Using Bland
 
             solutionTextArea.append("\nITERATION " + iteration + ":\n");
             displayTableBland(simplex.getTable());
 
             iteration++;
 
-            if (err == Simplex.ERROR.IS_OPTIMAL) {
+            if (err == Simplex.ERROR.IS_OPTIMAL)
+            {
                 solutionTextArea.append("\nOPTIMAL SOLUTION FOUND\n");
                 displaySolution();
                 quit = true;
-            } else if (err == Simplex.ERROR.UNBOUNDED) {
+            }
+            else if (err == Simplex.ERROR.UNBOUNDED)
+            {
                 solutionTextArea.append("\nPROBLEM IS UNBOUNDED\n");
                 quit = true;
             }
         }
 
-        if (!quit) {
+        if (!quit)
+        {
             solutionTextArea.append("\nITERATION LIMIT REACHED\n");
         }
     }
 
-    private void runSimplexIterationsPhase2() {
+    private void runSimplexIterationsPhase2()
+    {
         int iteration = 1;
         boolean quit = false;
 
-        while (!quit && iteration <= 50) {
-            Simplex.ERROR err = simplex.compute(1); // Using Bland's rule
+        while (!quit && iteration <= 50)
+        {
+            Simplex.ERROR err = simplex.compute(1); // Using Bland
 
             solutionTextArea.append("\nITERATION " + iteration + ":\n");
             displayPhase2Table(simplex.getTable());
 
             iteration++;
 
-            if (err == Simplex.ERROR.IS_OPTIMAL) {
+            if (err == Simplex.ERROR.IS_OPTIMAL)
+            {
                 solutionTextArea.append("\nOPTIMAL SOLUTION FOUND\n");
                 displaySolutionPhase2();
                 quit = true;
-            } else if (err == Simplex.ERROR.UNBOUNDED) {
+            } else if (err == Simplex.ERROR.UNBOUNDED)
+            {
                 solutionTextArea.append("\nPROBLEM IS UNBOUNDED\n");
                 quit = true;
             }
         }
 
-        if (!quit) {
+        if (!quit)
+        {
             solutionTextArea.append("\nITERATION LIMIT REACHED\n");
         }
     }
 
-    private void displayTableBland(double[][] table) {
+    private void displayTableBland(double[][] table)
+    {
         DecimalFormat df = new DecimalFormat("0.00");
 
         // Print column headers
         StringBuilder header = new StringBuilder();
-        for (int i = 0; i < model.numOriginalVars; i++) {
+        for (int i = 0; i < model.numOriginalVars; i++)
+        {
             header.append(String.format("%8s", "x" + (i + 1)));
         }
-        for (int i = 0; i < model.numSlackVars; i++) {
+        for (int i = 0; i < model.numSlackVars; i++)
+        {
             header.append(String.format("%8s", "w" + (i + 1)));
         }
         header.append(String.format("%8s", "b"));
         solutionTextArea.append(header.toString() + "\n");
 
         // Print table rows
-        for (int i = 0; i < table.length; i++) {
+        for (int i = 0; i < table.length; i++)
+        {
             StringBuilder row = new StringBuilder();
-            for (int j = 0; j < table[i].length; j++) {
+            for (int j = 0; j < table[i].length; j++)
+            {
                 row.append(String.format("%8s", df.format(table[i][j])));
             }
             solutionTextArea.append(row.toString() + "\n");
         }
     }
 
-    private void displayPhase1Table(double[][] table) {
+    private void displayPhase1Table(double[][] table)
+    {
         DecimalFormat df = new DecimalFormat("0.00");
 
         // Print column headers
         StringBuilder header = new StringBuilder();
-        for (int i = 0; i < model.numOriginalVars + 1; i++) {
+        for (int i = 0; i < model.numOriginalVars + 1; i++)
+        {
             header.append(String.format("%8s", "x" + (i)));
         }
-        for (int i = 0; i < model.numSlackVars; i++) {
+        for (int i = 0; i < model.numSlackVars; i++)
+        {
             header.append(String.format("%8s", "w" + (i + 1)));
         }
 
@@ -295,40 +291,48 @@ public class SimplexSolver extends JFrame {
         solutionTextArea.append(header.toString() + "\n");
 
         // Print table rows
-        for (int i = 0; i < table.length; i++) {
+        for (int i = 0; i < table.length; i++)
+        {
             StringBuilder row = new StringBuilder();
-            for (int j = 0; j < table[i].length; j++) {
+            for (int j = 0; j < table[i].length; j++)
+            {
                 row.append(String.format("%8s", df.format(table[i][j])));
             }
             solutionTextArea.append(row.toString() + "\n");
         }
     }
 
-    private void displayPhase2Table(double[][] table) {
+    private void displayPhase2Table(double[][] table)
+    {
         DecimalFormat df = new DecimalFormat("0.00");
 
         // Print column headers
         StringBuilder header = new StringBuilder();
-        for (int i = 0; i < model.numOriginalVars; i++) {
+        for (int i = 0; i < model.numOriginalVars; i++)
+        {
             header.append(String.format("%8s", "x" + (i + 1)));
         }
-        for (int i = 0; i < model.numSlackVars; i++) {
+        for (int i = 0; i < model.numSlackVars; i++)
+        {
             header.append(String.format("%8s", "w" + (i + 1)));
         }
         header.append(String.format("%8s", "b"));
         solutionTextArea.append(header.toString() + "\n");
 
         // Print table rows
-        for (int i = 0; i < table.length ; i++) {
+        for (int i = 0; i < table.length ; i++)
+        {
             StringBuilder row = new StringBuilder();
-            for (int j = 0; j < table[i].length - 1; j++) {
+            for (int j = 0; j < table[i].length - 1; j++)
+            {
                 row.append(String.format("%8s", df.format(table[i][j])));
             }
             solutionTextArea.append(row.toString() + "\n");
         }
     }
 
-    private void displaySolution() {
+    private void displaySolution()
+    {
         DecimalFormat df = new DecimalFormat("0.00");
         double[][] table = simplex.getTable();
         int lastRow = table.length - 1;
@@ -336,19 +340,22 @@ public class SimplexSolver extends JFrame {
 
         // Display objective value
         double objectiveValue = table[lastRow][rhsCol];
-        if (model.isMax) {
+        if (model.isMax)
+        {
             objectiveValue *= -1; // Convert back to maximization
         }
         solutionTextArea.append("\n--->OBJECTIVE VALUE: " + df.format(objectiveValue) + "\n");
 
         // Display variable values
         solutionTextArea.append("\n--->VARIABLE VALUES:\n");
-        for (int i = 0; i < model.numOriginalVars; i++) {
+        for (int i = 0; i < model.numOriginalVars; i++)
+        {
             solutionTextArea.append("x" + (i + 1) + " = " + findVariableValue(i) + "\n");
         }
     }
 
-    private void displaySolutionPhase2() {
+    private void displaySolutionPhase2()
+    {
         DecimalFormat df = new DecimalFormat("0.00");
         double[][] table = simplex.getTable();
         int lastRow = table.length - 1;
@@ -356,26 +363,30 @@ public class SimplexSolver extends JFrame {
 
         // Display objective value
         double objectiveValue = table[lastRow][rhsCol - 1];
-        if (model.isMax) {
+        if (model.isMax)
+        {
             objectiveValue *= -1; // Convert back to maximization
         }
         solutionTextArea.append("\n--->OBJECTIVE VALUE: " + df.format(objectiveValue) + "\n");
 
         // Display variable values
         solutionTextArea.append("\n--->VARIABLE VALUES:\n");
-        for (int i = 0; i < model.numOriginalVars; i++) {
+        for (int i = 0; i < model.numOriginalVars; i++)
+        {
             solutionTextArea.append("x" + (i + 1) + " = " + findVariableValue(i) + "\n");
         }
     }
 
-    private String findVariableValue(int varIndex) {
+    private String findVariableValue(int varIndex)
+    {
         DecimalFormat df = new DecimalFormat("0.00");
         double[][] table = simplex.getTable();
         int rhsCol = table[0].length - 1;
         int lastRow = table.length - 1;
 
         // Check if this variable is basic
-        for (int i = 0; i < table.length - 1; i++) {
+        for (int i = 0; i < table.length - 1; i++)
+        {
             boolean isBasic = true;
             for (int j = 0; j < rhsCol; j++)
             {
@@ -391,17 +402,18 @@ public class SimplexSolver extends JFrame {
 
             }
 
-            if (isBasic) {
+            if (isBasic)
+            {
                 return df.format(table[i][rhsCol]);
             }
-            System.out.println(table[i][rhsCol]);
         }
 
         // If not basic, value is 0
         return "0.00";
     }
 
-    public static void solveAndDisplay(StandardFormTransformer.StandardLPModel model) {
+    public static void solveAndDisplay(StandardFormTransformer.StandardLPModel model)
+    {
         SwingUtilities.invokeLater(() -> new SimplexSolver(model));
     }
 }
