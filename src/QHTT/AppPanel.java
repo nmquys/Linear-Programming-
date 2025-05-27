@@ -17,7 +17,7 @@ public class AppPanel extends JFrame
         this.init();
 
         this.setTitle("Linear Programming Input");
-        this.setSize(500, 250);
+        this.setSize(500, 350);
         this.setLocationRelativeTo(null);
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         this.setVisible(true);

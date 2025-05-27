@@ -201,7 +201,7 @@ public class StandardFormTransformer extends JFrame {
 
             mainPanel.add(buttonPanel, BorderLayout.SOUTH);
 
-            JFrame frame = new JFrame("Bảng Dạng Chuẩn");
+            JFrame frame = new JFrame("Standard Form");
             frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
             frame.setSize(700, 350);
             frame.setLocationRelativeTo(null);
