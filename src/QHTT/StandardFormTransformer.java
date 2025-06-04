@@ -127,7 +127,7 @@ public class StandardFormTransformer extends JFrame
             {
                 double value = _model.objectiveCoeffs[j];
                 tableData[0][j] = value;
-                System.out.println("Selected Objective: " + (isMax ? "Maximize" : "Minimize"));
+                //System.out.println("Selected Objective: " + (isMax ? "Maximize" : "Minimize"));
 
             }
 
@@ -171,6 +171,7 @@ public class StandardFormTransformer extends JFrame
                 try
                 {
                     SimplexSolver.solveAndDisplay(_model);
+                    frame.setVisible(false);
                 } catch (Exception ex)
                 {
                     JOptionPane.showMessageDialog(frame, "Lỗi: " + ex.getMessage());

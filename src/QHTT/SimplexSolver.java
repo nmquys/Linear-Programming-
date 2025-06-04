@@ -3,7 +3,7 @@ package QHTT;
 import javax.swing.*;
 import java.awt.*;
 import java.text.DecimalFormat;
-
+import java.util.ArrayList;
 
 public class SimplexSolver extends JFrame
 {
@@ -75,10 +75,18 @@ public class SimplexSolver extends JFrame
 
         simplex = new Simplex(numConstraints, numVariables);
         simplex.fillTable(tableData);
+        String[] variable_list = new String[model.numOriginalVars + model.numSlackVars];
+        for (int i = 0; i < model.numOriginalVars; i++) {
+        	variable_list[i] = "x" + (i+1);
+        }
+        for (int i = 0; i < model.numSlackVars; i++) {
+        	variable_list[i+model.numOriginalVars] = "w" + (i+1);
+        }
+        simplex.set_variable_list(variable_list);
 
-        solutionTextArea.append("\nINITIAL SIMPLEX TABLE:\n");
-        displayTableBland(simplex.getTable());
-
+        solutionTextArea.append("\nINITIAL SIMPLEX DICTIONARY:\n");
+        //displayTableBland(simplex.getTable());
+        displayDictionary(simplex);
         runSimplexIterations();
     }
 
@@ -94,11 +102,22 @@ public class SimplexSolver extends JFrame
 
 
         // Create phase 1 simplex with extra column for artificial variables
-        Simplex simplex = new Simplex(numConstraints, numVariables + 1);
+        Simplex simplex = new Simplex(numConstraints, numVariables);
         simplex.fillTable_phase1(phase1Table);
-
-        solutionTextArea.append("\nPHASE 1 INITIAL TABLE:\n");
-        displayPhase1Table(simplex.getTable());
+        String[] variable_list = new String[model.numOriginalVars + model.numSlackVars];
+        for (int i = 0; i < model.numOriginalVars; i++) {
+        	variable_list[i] = "x" + (i+1);
+        }
+        for (int i = 0; i < model.numSlackVars; i++) {
+        	variable_list[i+model.numOriginalVars] = "w" + (i+1);
+        }
+        simplex.set_variable_list_phase1(variable_list);
+        
+        
+        solutionTextArea.append("\nPHASE 1 INITIAL DICTIONARY:\n");
+        solutionTextArea.append("(let z = xi)\n");
+        //simplex.print();
+        displayDictionary(simplex);
 
         // Run phase 1
         if (runPhase1(simplex))
@@ -111,9 +130,10 @@ public class SimplexSolver extends JFrame
 
             this.simplex = simplex;
 
-            solutionTextArea.append("\nPHASE 2 INITIAL TABLE:\n");
-            displayPhase2Table(simplex.getTable());
-
+            solutionTextArea.append("\nPHASE 2 INITIAL DICTIONARY:\n");
+            solutionTextArea.append("(z is optimal value)\n");
+            //displayPhase2Table(simplex.getTable());
+            displayDictionary(simplex);
             // Continue with phase 2
             runSimplexIterationsPhase2();
         }
@@ -122,21 +142,29 @@ public class SimplexSolver extends JFrame
     private boolean runPhase1(Simplex simplex)
     {
         simplex.compute(3);
-        solutionTextArea.append("\nPHASE 1 ITERATION 1 :\n");
-        displayPhase1Table(simplex.getTable());
-
+        solutionTextArea.append("\nPHASE 1 \nITERATION 1 :\n");
+        solutionTextArea.append("Variable in: " + simplex.getVariableIn() + "\n");
+        solutionTextArea.append("Variable out: " + simplex.getVariableOut() + "\n");
+        solutionTextArea.append("Dictionary:\n");
+        //displayPhase1Table(simplex.getTable());
+        displayDictionary(simplex);
+        
         int iteration = 2;
         boolean phase1Complete = false;
         boolean feasible = false;
 
         while (!phase1Complete && iteration <= 50)
         {
-            Simplex.ERROR err = simplex.compute(1);
+            Simplex.ERROR err = simplex.compute(2);
 
             if(err == Simplex.ERROR.NOT_OPTIMAL)
             {
                 solutionTextArea.append("\nITERATION " + iteration + ":\n");
-                displayPhase1Table(simplex.getTable());
+                solutionTextArea.append("Variable in: " + simplex.getVariableIn() + "\n");
+                solutionTextArea.append("Variable out: " + simplex.getVariableOut() + "\n");
+                solutionTextArea.append("Dictionary:\n");
+                //displayPhase1Table(simplex.getTable());
+                displayDictionary(simplex);
             }
             iteration++;
 
@@ -185,11 +213,15 @@ public class SimplexSolver extends JFrame
 
         while (!quit && iteration <= 50)
         {
-            Simplex.ERROR err = simplex.compute(1); // Using Bland
+            Simplex.ERROR err = simplex.compute(2); // Using Bland
 
             solutionTextArea.append("\nITERATION " + iteration + ":\n");
-            displayTableBland(simplex.getTable());
-
+            //displayTableBland(simplex.getTable());
+            solutionTextArea.append("Variable in: " + simplex.getVariableIn() + "\n");
+            solutionTextArea.append("Variable out: " + simplex.getVariableOut() + "\n"); 
+            solutionTextArea.append("Dictionary:\n");
+            displayDictionary(simplex);
+            
             iteration++;
 
             if (err == Simplex.ERROR.IS_OPTIMAL)
@@ -218,10 +250,15 @@ public class SimplexSolver extends JFrame
 
         while (!quit && iteration <= 50)
         {
-            Simplex.ERROR err = simplex.compute(1); // Using Bland
+            Simplex.ERROR err = simplex.compute(2); // Using Bland
 
             solutionTextArea.append("\nITERATION " + iteration + ":\n");
-            displayPhase2Table(simplex.getTable());
+            solutionTextArea.append("Variable in: " + simplex.getVariableIn() + "\n");
+            solutionTextArea.append("Variable out: " + simplex.getVariableOut() + "\n");
+            solutionTextArea.append("Dictionary:\n");
+            
+            //displayPhase2Table(simplex.getTable());
+            displayDictionary(simplex);
 
             iteration++;
 
@@ -243,7 +280,7 @@ public class SimplexSolver extends JFrame
         }
     }
 
-    private void displayTableBland(double[][] table)
+    private void displayTableBland(float[][] fs)
     {
         DecimalFormat df = new DecimalFormat("0.00");
 
@@ -261,18 +298,18 @@ public class SimplexSolver extends JFrame
         solutionTextArea.append(header.toString() + "\n");
 
         // Print table rows
-        for (int i = 0; i < table.length; i++)
+        for (int i = 0; i < fs.length; i++)
         {
             StringBuilder row = new StringBuilder();
-            for (int j = 0; j < table[i].length; j++)
+            for (int j = 0; j < fs[i].length; j++)
             {
-                row.append(String.format("%8s", df.format(table[i][j])));
+                row.append(String.format("%8s", df.format(fs[i][j])));
             }
             solutionTextArea.append(row.toString() + "\n");
         }
     }
 
-    private void displayPhase1Table(double[][] table)
+    private void displayPhase1Table(float[][] fs)
     {
         DecimalFormat df = new DecimalFormat("0.00");
 
@@ -291,18 +328,18 @@ public class SimplexSolver extends JFrame
         solutionTextArea.append(header.toString() + "\n");
 
         // Print table rows
-        for (int i = 0; i < table.length; i++)
+        for (int i = 0; i < fs.length; i++)
         {
             StringBuilder row = new StringBuilder();
-            for (int j = 0; j < table[i].length; j++)
+            for (int j = 0; j < fs[i].length; j++)
             {
-                row.append(String.format("%8s", df.format(table[i][j])));
+                row.append(String.format("%8s", df.format(fs[i][j])));
             }
             solutionTextArea.append(row.toString() + "\n");
         }
     }
 
-    private void displayPhase2Table(double[][] table)
+    private void displayPhase2Table(float[][] fs)
     {
         DecimalFormat df = new DecimalFormat("0.00");
 
@@ -320,45 +357,48 @@ public class SimplexSolver extends JFrame
         solutionTextArea.append(header.toString() + "\n");
 
         // Print table rows
-        for (int i = 0; i < table.length ; i++)
+        for (int i = 0; i < fs.length ; i++)
         {
             StringBuilder row = new StringBuilder();
-            for (int j = 0; j < table[i].length - 1; j++)
+            
+            for (int j = 0; j < fs[i].length - 1; j++)
             {
-                row.append(String.format("%8s", df.format(table[i][j])));
+                row.append(String.format("%8s", df.format(fs[i][j])));
             }
             solutionTextArea.append(row.toString() + "\n");
         }
     }
+    
+    public void displayDictionary(Simplex simplex) {
+    	
+    	StringBuilder sb = new StringBuilder();
+    	
+    	 
+    	String[][] ans = simplex.print_dictionary();
+    	
+    	for (int j = 0; j < ans[0].length; j++) {
+    		sb.append(ans[0][j]);
+    	}
+    	solutionTextArea.append(sb.toString() + "\n");
+    	sb = new StringBuilder();
+    	for (int j = 0; j < ans[0].length; j++) {
+    		sb.append("------");
+    	}
+    	solutionTextArea.append(sb.toString() + "\n");
+    	for(int i = 1; i < ans.length; i++) {
+    		sb = new StringBuilder();
+    		for (int j = 0; j < ans[0].length; j++) {
+        		sb.append(ans[i][j]);
+        	}
+    		solutionTextArea.append(sb.toString() + "\n");
+    	}
+    }
 
     private void displaySolution()
     {
-        DecimalFormat df = new DecimalFormat("0.00");
-        double[][] table = simplex.getTable();
-        int lastRow = table.length - 1;
-        int rhsCol = table[0].length -1;
-
-        // Display objective value
-        double objectiveValue = table[lastRow][rhsCol];
-        if (model.isMax)
-        {
-            objectiveValue *= -1; // Convert back to maximization
-        }
-        solutionTextArea.append("\n--->OBJECTIVE VALUE: " + df.format(objectiveValue) + "\n");
-
-        // Display variable values
-        solutionTextArea.append("\n--->VARIABLE VALUES:\n");
-        for (int i = 0; i < model.numOriginalVars; i++)
-        {
-            solutionTextArea.append("x" + (i + 1) + " = " + findVariableValue(i) + "\n");
-        }
-    }
-
-    private void displaySolutionPhase2()
-    {
-        DecimalFormat df = new DecimalFormat("0.00");
-        double[][] table = simplex.getTable();
-        int lastRow = table.length - 1;
+    	DecimalFormat df = new DecimalFormat("0.00");
+        float[][] table = simplex.getTable();
+        int lastRow = simplex.get_rows() - 1; // Last row is the objective row;
         int rhsCol = table[0].length -1;
 
         // Display objective value
@@ -371,17 +411,92 @@ public class SimplexSolver extends JFrame
 
         // Display variable values
         solutionTextArea.append("\n--->VARIABLE VALUES:\n");
+        
+        ArrayList<Integer> basis = simplex.get_basis();
+        
+		//simplex.print();
+        //for (int i : basis) {
+		//	System.out.println("Basis variable col: " + i);
+		//}
+        
         for (int i = 0; i < model.numOriginalVars; i++)
         {
-            solutionTextArea.append("x" + (i + 1) + " = " + findVariableValue(i) + "\n");
+        	solutionTextArea.append("x" + (i + 1) + " = ");//+ "\n"
+        	if(!basis.contains(i)) {
+        		if(-0.000001f < table[lastRow][i] && table[lastRow][i] < 0.000001f) {
+        			// If the value is close to zero, treat it as zero
+        			// If x has coefficient 0 in z then is in interval [0,r]
+        			solutionTextArea.append(" some value greater than 0.00 \n");
+        			continue;
+        		}
+				solutionTextArea.append(" 0.00\n");
+				continue;
+        	}
+            String all_sol = simplex.find_all_solutions(basis.indexOf(i));
+			if (all_sol != "") {
+				solutionTextArea.append(all_sol + "\n");
+			}
+			else {
+				solutionTextArea.append("\n");
+			}
         }
+        //simplex.print();
+    }
+
+    private void displaySolutionPhase2()
+    {
+    	DecimalFormat df = new DecimalFormat("0.00");
+        float[][] table = simplex.getTable();
+        int lastRow = simplex.get_rows() - 1; // Last row is the objective row;
+        int rhsCol = table[0].length -1;
+
+        // Display objective value
+        double objectiveValue = table[lastRow][rhsCol - 1];
+        if (model.isMax)
+        {
+            objectiveValue *= -1; // Convert back to maximization
+        }
+        solutionTextArea.append("\n--->OBJECTIVE VALUE: " + df.format(objectiveValue) + "\n");
+
+        // Display variable values
+        solutionTextArea.append("\n--->VARIABLE VALUES:\n");
+        
+        ArrayList<Integer> basis = simplex.get_basis();
+        
+		//simplex.print();
+        //for (int i : basis) {
+		//	System.out.println("Basis variable col: " + i);
+		//}
+        
+        for (int i = 0; i < model.numOriginalVars; i++)
+        {
+        	solutionTextArea.append("x" + (i + 1) + " = ");//+ "\n"
+        	if(!basis.contains(i)) {
+        		if(-0.000001f < table[lastRow][i] && table[lastRow][i] < 0.000001f) {
+        			// If the value is close to zero, treat it as zero
+        			// If x has coefficient 0 in z then is in interval [0,r]
+        			solutionTextArea.append(" some value greater than 0.00 \n");
+        			continue;
+        		}
+				solutionTextArea.append(" 0.00\n");
+				continue;
+        	}
+            String all_sol = simplex.find_all_solutions(basis.indexOf(i));
+			if (all_sol != "") {
+				solutionTextArea.append(all_sol + "\n");
+			}
+			else {
+				solutionTextArea.append("\n");
+			}
+        }
+        //simplex.print();
     }
 
     private String findVariableValue(int varIndex)
     {
         DecimalFormat df = new DecimalFormat("0.00");
-        double[][] table = simplex.getTable();
-        int rhsCol = table[0].length - 1;
+        float[][] table = simplex.getTable();
+        int rhsCol = simplex.get_cols() - 1; // Last column is RHS;
         int lastRow = table.length - 1;
 
         // Check if this variable is basic
