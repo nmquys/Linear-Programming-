@@ -127,7 +127,6 @@ public class StandardFormTransformer extends JFrame
             {
                 double value = _model.objectiveCoeffs[j];
                 tableData[0][j] = value;
-                //System.out.println("Selected Objective: " + (isMax ? "Maximize" : "Minimize"));
 
             }
 

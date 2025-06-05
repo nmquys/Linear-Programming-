@@ -3,6 +3,7 @@ package QHTT;
 import javax.swing.*;
 import java.awt.*;
 import java.util.ArrayList;
+import java.util.Scanner;
 
 public class AppPanel extends JFrame
 {
@@ -118,17 +119,6 @@ public class AppPanel extends JFrame
         inputPanel.add(constraintsPanel);
     }
 
-    private void PrintLoop(int _numVars, JPanel _x)
-    {
-        for (int j = 0; j < _numVars; j++)
-        {
-            JTextField coeffField = new JTextField(3);
-            _x.add(coeffField);
-            _x.add(new JLabel("x" + (j + 1) + (j < _numVars - 1 ? " + " : "")));
-        }
-    }
-
-
     private void convertAndDisplayStandardForm(int numVars, int numCons)
     {
         StandardFormTransformer.LPModel model = new StandardFormTransformer.LPModel();
@@ -137,23 +127,35 @@ public class AppPanel extends JFrame
         model.rhsValues = new ArrayList<>();
         model.constraintSigns = new ArrayList<>();
 
-        //Lấy hệ số hàm mục tiêu
+        // Lấy hệ số hàm mục tiêu
         Component[] components = objectivePanel.getComponents();
 
         JComboBox<String> maxMinBox = (JComboBox<String>) objectivePanel.getComponent(0);
         model.isMax = maxMinBox.getSelectedItem().equals("Max");
 
-        int compIndex = 2; //bỏ qua JComboBox và JLabel "z ="
+        int compIndex = 2; // bỏ qua JComboBox và JLabel "z ="
         for (int i = 0; i < numVars; i++)
         {
             JTextField coeffField = (JTextField) components[compIndex];
-            if(model.isMax)
+            double value;
+            try
             {
-                model.objectiveCoeffs[i] = -Double.parseDouble(coeffField.getText());
+                value = parseInput(coeffField.getText());
+            }
+            catch (NumberFormatException e)
+            {
+                JOptionPane.showMessageDialog(this, "Lỗi định dạng số ở hệ số x" + (i+1) + ": " + e.getMessage());
+                return;
+            }
+
+
+            if (model.isMax)
+            {
+                model.objectiveCoeffs[i] = -value;
             }
             else
             {
-                model.objectiveCoeffs[i] = Double.parseDouble(coeffField.getText());
+                model.objectiveCoeffs[i] = value;
             }
             compIndex += 2; // bỏ qua JLabel "x +"
         }
@@ -169,7 +171,15 @@ public class AppPanel extends JFrame
             for (int j = 0; j < numVars; j++)
             {
                 JTextField coeffField = (JTextField) rowComponents[index];
-                coeffs[j] = Double.parseDouble(coeffField.getText());
+                try
+                {
+                    coeffs[j] = parseInput(coeffField.getText());
+                }
+                catch (NumberFormatException e)
+                {
+                    JOptionPane.showMessageDialog(this, "Lỗi định dạng số ở ràng buộc " + (i+1) + ", hệ số x" + (j+1) + ": " + e.getMessage());
+                    return;
+                }
                 index += 2; // skip JLabel
             }
 
@@ -177,7 +187,16 @@ public class AppPanel extends JFrame
             String sign = (String) signBox.getSelectedItem();
 
             JTextField rhsField = (JTextField) rowComponents[index + 1];
-            double rhs = Double.parseDouble(rhsField.getText());
+            double rhs;
+            try
+            {
+                rhs = parseInput(rhsField.getText());
+            }
+            catch (NumberFormatException e)
+            {
+                JOptionPane.showMessageDialog(this, "Lỗi định dạng số ở vế phải ràng buộc " + (i+1) + ": " + e.getMessage());
+                return;
+            }
 
             // Nếu dấu là >= thì đổi dấu sang <= (chuyển về <=)
             if (sign.equals(">="))
@@ -201,6 +220,65 @@ public class AppPanel extends JFrame
         // Hiển thị bảng
         StandardFormTransformer viewer = new StandardFormTransformer();
         viewer.showStandardModel(standardModel);
+    }
+
+    private double parseInput(String input) throws NumberFormatException
+    {
+        try
+        {
+            // Thử parse như số thập phân thông thường trước
+            return Double.parseDouble(input.trim());
+        }
+        catch (NumberFormatException e1)
+        {
+            // Nếu không thành công, thử parse như phân số
+            try
+            {
+                return convertFractionToDecimal(input.trim());
+            }
+            catch (NumberFormatException e2)
+            {
+                throw new NumberFormatException("Giá trị '" + input + "' không phải là số thập phân hoặc phân số hợp lệ");
+            }
+        }
+    }
+
+    public static double convertFractionToDecimal(String fraction) throws NumberFormatException
+    {
+        // Tách tử số và mẫu số bằng dấu "/"
+        String[] parts = fraction.split("/");
+
+        if (parts.length != 2)
+        {
+            throw new NumberFormatException("Phân số phải có dạng 'tử/mẫu'");
+        }
+
+        try
+        {
+            double numerator = Double.parseDouble(parts[0].trim());
+            double denominator = Double.parseDouble(parts[1].trim());
+
+            if (denominator == 0)
+            {
+                throw new NumberFormatException("Mẫu số không thể bằng 0");
+            }
+
+            return numerator / denominator;
+        }
+        catch (NumberFormatException e)
+        {
+            throw new NumberFormatException("Tử số và mẫu số phải là số hợp lệ");
+        }
+    }
+
+    private void PrintLoop(int _numVars, JPanel _x)
+    {
+        for (int j = 0; j < _numVars; j++)
+        {
+            JTextField coeffField = new JTextField(3);
+            _x.add(coeffField);
+            _x.add(new JLabel("x" + (j + 1) + (j < _numVars - 1 ? " + " : "")));
+        }
     }
 
     public static void main(String[] args)
