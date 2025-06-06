@@ -198,20 +198,37 @@ public class AppPanel extends JFrame
                 return;
             }
 
-            // Nếu dấu là >= thì đổi dấu sang <= (chuyển về <=)
-            if (sign.equals(">="))
-            {
-                for (int j = 0; j < coeffs.length; j++)
-                {
+            if (sign.equals("=")) {
+                // Thêm ràng buộc <=
+                model.constraintCoeffs.add(coeffs.clone());
+                model.rhsValues.add(rhs);
+                model.constraintSigns.add("<=");
+
+                // Thêm ràng buộc >= (sau khi đổi dấu)
+                double[] reversedCoeffs = new double[numVars];
+                for (int j = 0; j < numVars; j++) {
+                    reversedCoeffs[j] = -coeffs[j];
+                }
+                model.constraintCoeffs.add(reversedCoeffs);
+                model.rhsValues.add(-rhs);
+                model.constraintSigns.add("<=");
+            }
+            else if (sign.equals(">=")) {
+                // Đổi dấu để chuyển về <=
+                for (int j = 0; j < coeffs.length; j++) {
                     coeffs[j] *= -1;
                 }
                 rhs *= -1;
-                sign = "<=";
+                model.constraintCoeffs.add(coeffs);
+                model.rhsValues.add(rhs);
+                model.constraintSigns.add("<=");
             }
-
-            model.constraintCoeffs.add(coeffs);
-            model.rhsValues.add(rhs);
-            model.constraintSigns.add(sign);
+            else {
+                // Dấu <= giữ nguyên
+                model.constraintCoeffs.add(coeffs);
+                model.rhsValues.add(rhs);
+                model.constraintSigns.add("<=");
+            }
         }
 
         // Chuyển sang dạng chuẩn
